@@ -30,7 +30,8 @@ for arg in var_help:
 		print(" "+"-"*(57))
 		print("| -pinout: Details de sortie des broches GPIO disponibles |")
 		print("| -setmode:BOARD se réferer par le numéro de la broche du |\n|                connecteur [par default]                 |")
-		print("| -setmode:BCM se réferer par le numéro 'Broadcom SOC     |\n|              channel' soit les numéro associé au GPIO   |  \n","-"*57)
+		print("| -setmode:BCM se réferer par le numéro 'Broadcom SOC     |\n|              channel' soit les numéro associé au GPIO   |\n")
+		print("| -loop [seconds]  met dans l'état [on/off] choisi pendant|\n|                 le délai et reviens à l'état initial    |\n","-"*57)
 		exit()
 
 if ("on" in sys.argv):
@@ -78,6 +79,9 @@ if ((etat!="on") and (etat!="off")) and port=="None":
 if finish==True:
 	print("\n  \033[7;40;32mrendering : "+error+color_end+"\n","-"*57)
 	GPIO.setup(port, GPIO.OUT)
+	if ("-loop" in sys.argv):
+		print(GPIO.input(port))
+
 	if etat=="on":
 		GPIO.output(port, 1)
 	if etat=="off":
