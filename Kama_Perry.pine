@@ -1,0 +1,92 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+
+study("[KAMA] Perry Kaufman Adaptive MA", overlay=true, max_bars_back=5000)
+
+Price = input(hl2, title = "Price")
+PeriodF = input(13, title = "PeriodF")
+PeriodS = input(55, title = "PeriodS")
+EnableSmooth = input(false, title = "EnableSmooth")
+
+AMA(Period, Price) =>
+	//Vars: 
+	Noise = 0.00
+	Signal = 0.00
+	Diff = 0.00
+	efRatio = 0.00 
+	Smooth = 1.00
+	Fastest = 0.6667
+	Slowest = 0.0645 
+	AdaptMA = 0.00
+	AMA = 0.00
+	
+	Diff := abs(Price - nz(Price[1]))
+	if bar_index <= Period
+		AdaptMA := Price
+	if bar_index > Period
+		Signal := abs(Price - nz(Price[Period]))
+		Noise := sum(Diff, Period)
+		efRatio := Signal / Noise
+		Smooth := pow(efRatio * (Fastest - Slowest) + Slowest, 2)
+		AdaptMA := nz(AdaptMA[1]) + Smooth * (Price - nz(AdaptMA[1]))
+	AMA := AdaptMA
+	AMA
+
+AMAF(Period, Pcnt, Price) =>
+	//Vars: 
+	Noise = 0.00 
+	Signal = 0.00
+	Diff = 0.00
+	efRatio = 0.00 
+	Smooth = 1.00
+	Fastest = 0.6667
+	Slowest  = 0.0645
+	AdaptMA = 0.00
+	AMAFltr = 0.00
+	AMAF  = 0.00
+	
+	Diff := abs(Price - nz(Price[1]))
+	if bar_index <= Period
+		AdaptMA := Price
+	
+	if bar_index > Period
+		Signal := abs(Price - nz(Price[Period]))
+		Noise := sum(Diff, Period)	
+		efRatio := Signal / Noise	
+		Smooth := pow(efRatio * (Fastest - Slowest) + Slowest, 2)
+		AdaptMA := nz(AdaptMA[1]) + Smooth * (Price - nz(AdaptMA[1]))
+		AMAFltr := stdev(AdaptMA-nz(AdaptMA[1]), Period) * Pcnt
+	AMAF := AMAFltr
+
+//Vars: 
+AMAValF = 0.00  
+AMAValS = 0.00  
+
+AMAValF := EnableSmooth ? linreg(AMA(PeriodF, Price), PeriodF, 0) :AMA(PeriodF, Price)
+AMAValS := EnableSmooth ? linreg(AMA(PeriodS, Price), PeriodS, 0) :AMA(PeriodS, Price)
+
+Plot1 = plot(AMAValF, "AMAValF", color=color.yellow, linewidth =2)
+Plot2 = plot(AMAValS, "AMAValS", color=color.fuchsia, linewidth =2)
+fill(Plot1, Plot2, color=AMAValF>AMAValS ? color.yellow : color.fuchsia, transp=60)
+
+long = crossover(AMAValF, AMAValS)
+short = crossunder(AMAValF, AMAValS)
+
+// Plots labels
+l = short ? 
+       label.new (bar_index, AMAValF, "SELL", color=color.red, textcolor=color.white, style=label.style_labeldown, yloc=yloc.price, size=size.small) :
+       long ?
+           label.new (bar_index, AMAValF, "BUY", color=color.green, textcolor=color.white, style=label.style_labelup, yloc=yloc.price, size=size.small) :
+           na
+
+alertcondition(long, title='Alert on LONG', message='BUY!')
+alertcondition(short, title='Alert on SHORT', message='SELL!')
+
+
+//EMA
+EMA1 = input(50, minval=1, title="EMA1"),
+EMA2 = input(100, minval=1, title="EMA2")
+EMA3 = input(200, minval=1, title="EMA3"),
+
+plot(ema(close, EMA1), color=color.rgb(0, 13, 255), linewidth=2)
+plot(ema(close, EMA2), color=color.rgb(255, 255, 255), linewidth=2)
+plot(ema(close, EMA3), color=color.rgb(255, 0, 0), linewidth=2)
