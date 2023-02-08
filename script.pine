@@ -1,0 +1,12 @@
+// ©petitcroco13
+//@version=1
+
+study("Moyenne mobiles exponentielles EMA1, EMA2 et EMA3", overlay=true, max_bars_back=5000)
+
+EMA1 = input(50, minval=1, title="EMA1"),
+EMA2 = input(100, minval=1, title="EMA2")
+EMA3 = input(200, minval=1, title="EMA3"),
+
+plot(ema(close, EMA1), color=color.red, linewidth=2)
+plot(ema(close, EMA2), color=color.yellow, linewidth=2)
+plot(ema(close, EMA3), color=color.purple, linewidth=2)
